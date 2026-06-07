@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: 'Bricolage Grotesque'; font-weight: 600; font-style: normal;
+        font-display: block; src: url('fonts/bricolage-600.woff2') format('woff2'); }
+      @font-face { font-family: 'Bricolage Grotesque'; font-weight: 800; font-style: normal;
+        font-display: block; src: url('fonts/bricolage-800.woff2') format('woff2'); }
+      @font-face { font-family: 'Fraunces'; font-weight: 400; font-style: normal;
+        font-display: block; src: url('fonts/fraunces-400.woff2') format('woff2'); }
+      @font-face { font-family: 'Fraunces'; font-weight: 600; font-style: normal;
+        font-display: block; src: url('fonts/fraunces-600.woff2') format('woff2'); }
+      @font-face { font-family: 'Fraunces'; font-weight: 400; font-style: italic;
+        font-display: block; src: url('fonts/fraunces-400i.woff2') format('woff2'); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1080px; height: 1920px; overflow: hidden;
+        background: #06101F;
+      }
+      :root {
+        --bg: #0A1A33; --bg-deep: #06101F; --surface: #13294D;
+        --fg: #F4F7FB; --muted: #9FB3D1; --gold: #E8B85C;
+        --gold-bright: #F4CE84; --teal: #46C7B8; --line: #274063;
+      }
+      #root { position: absolute; inset: 0; background: var(--bg-deep); overflow: hidden; }
+
+      /* ---------- Base + avatar ---------- */
+      #avatar { position: absolute; inset: 0; width: 1080px; height: 1920px;
+        object-fit: cover; object-position: 50% 22%; z-index: 1; background: var(--bg); }
+
+      /* ---------- Scrims over avatar (legibility) ---------- */
+      .scrim { position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none; }
+      #scrim-top { top: 0; height: 440px;
+        background: linear-gradient(180deg, rgba(6,16,31,.92) 0%, rgba(6,16,31,.45) 42%, rgba(6,16,31,0) 100%); }
+      #scrim-bot { bottom: 0; height: 1080px;
+        background: linear-gradient(0deg, rgba(6,16,31,.96) 0%, rgba(6,16,31,.86) 22%, rgba(6,16,31,.30) 64%, rgba(6,16,31,0) 100%); }
+      #grain { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: .05;
+        mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+      /* ---------- Avatar-scene chrome ---------- */
+      #chrome { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+      #wordmark { position: absolute; top: 86px; left: 90px; display: flex; align-items: center; gap: 18px; opacity: 0; }
+      #wordmark .mk { width: 54px; height: 54px; border-radius: 12px; background: var(--gold);
+        color: var(--bg-deep); font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 38px;
+        display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 26px rgba(232,184,92,.4); }
+      #wordmark .tx { font-family: 'JetBrains Mono'; font-weight: 500; font-size: 25px; letter-spacing: .14em;
+        color: var(--muted); text-transform: uppercase; line-height: 1.25; }
+      #wordmark .tx b { color: var(--fg); font-weight: 700; }
+      #progress-wrap { position: absolute; bottom: 64px; left: 90px; right: 90px; height: 6px;
+        background: rgba(39,64,99,.55); border-radius: 4px; overflow: hidden; opacity: 0; }
+      #progress { position: absolute; inset: 0; transform-origin: left center; transform: scaleX(0);
+        background: linear-gradient(90deg, var(--gold), var(--gold-bright)); border-radius: 4px; }
+
+      /* ---------- Captions ---------- */
+      #captions { position: absolute; left: 90px; right: 90px; bottom: 560px; height: 320px; z-index: 5; pointer-events: none; }
+      .cap { position: absolute; left: 0; right: 0; bottom: 0; text-align: center;
+        font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 64px; line-height: 1.16;
+        color: var(--fg); letter-spacing: -.02em; opacity: 0;
+        text-shadow: 0 4px 22px rgba(3,8,18,.85), 0 1px 2px rgba(3,8,18,.8); }
+      .cap .gold { color: var(--gold); }
+
+      /* ---------- Shared card decoratives ---------- */
+      .card { position: absolute; inset: 0; overflow: hidden; background: var(--bg);
+        display: flex; flex-direction: column; }
+      .glow { position: absolute; border-radius: 50%; filter: blur(8px);
+        background: radial-gradient(circle, rgba(232,184,92,.42) 0%, rgba(232,184,92,.12) 42%, rgba(232,184,92,0) 70%); }
+      .ghostsign { position: absolute; font-family: 'Fraunces'; font-weight: 600; color: var(--gold);
+        opacity: .10; line-height: .8; pointer-events: none; }
+      .regmark { position: absolute; font-family: 'JetBrains Mono'; font-weight: 500; font-size: 24px;
+        letter-spacing: .16em; color: var(--muted); text-transform: uppercase; }
+
+      /* ---------- Title card ---------- */
+      #title { z-index: 10; }
+      #title .pad { position: relative; z-index: 3; width: 100%; height: 100%;
+        padding: 150px 96px 130px; display: flex; flex-direction: column; }
+      #title .kicker { font-family: 'JetBrains Mono'; font-weight: 600; font-size: 28px; letter-spacing: .24em;
+        color: var(--teal); text-transform: uppercase; opacity: 0; }
+      #title .aud { margin-top: 56px; }
+      #title .aud .line { font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 92px; line-height: 1.04;
+        letter-spacing: -.035em; color: var(--fg); display: flex; align-items: center; gap: 26px; opacity: 0; }
+      #title .aud .dot { width: 16px; height: 16px; border-radius: 50%; background: var(--teal); flex: none; }
+      #title .rule { height: 3px; background: linear-gradient(90deg, var(--gold), rgba(232,184,92,0));
+        transform-origin: left center; transform: scaleX(0); margin: 52px 0 0; width: 70%; }
+      #title .hook { margin-top: 46px; font-family: 'Fraunces'; font-weight: 400; font-style: italic;
+        font-size: 46px; line-height: 1.3; color: var(--muted); max-width: 760px; opacity: 0; }
+      #title .money { margin-top: auto; font-family: 'Bricolage Grotesque'; font-weight: 800;
+        font-size: 130px; line-height: .94; letter-spacing: -.04em; color: var(--gold); }
+      #title .money .l { display: block; opacity: 0; text-shadow: 0 8px 50px rgba(232,184,92,.35); }
+      #title .money .cur { font-family: 'JetBrains Mono'; font-weight: 700; }
+
+      /* ---------- Outro CTA card ---------- */
+      #outro { z-index: 11; }
+      #outro .pad { position: relative; z-index: 3; width: 100%; height: 100%;
+        padding: 170px 96px 150px; display: flex; flex-direction: column; align-items: flex-start; }
+      #outro .kicker { font-family: 'JetBrains Mono'; font-weight: 600; font-size: 28px; letter-spacing: .24em;
+        color: var(--teal); text-transform: uppercase; opacity: 0; }
+      #outro .head { margin-top: 54px; font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 94px;
+        line-height: 1.02; letter-spacing: -.035em; color: var(--fg); opacity: 0; }
+      #outro .head .em { color: var(--gold); }
+      #outro .field-row { margin-top: 68px; display: flex; align-items: center; gap: 34px; width: 100%; }
+      #outro .arrow { flex: none; opacity: 0; }
+      #outro .field { flex: 1; display: flex; align-items: center; gap: 8px;
+        background: var(--surface); border: 3px solid var(--gold); border-radius: 26px;
+        padding: 32px 38px; box-shadow: 0 26px 70px rgba(0,0,0,.5), 0 0 0 6px rgba(232,184,92,.10);
+        opacity: 0; transform-origin: left center; }
+      #outro .field .word { font-family: 'JetBrains Mono'; font-weight: 700; font-size: 64px; letter-spacing: .03em;
+        color: var(--gold-bright); white-space: nowrap; overflow: hidden; }
+      #outro .field .cursor { width: 7px; height: 70px; background: var(--gold-bright); border-radius: 2px; flex: none; }
+      #outro .sub { margin-top: 60px; font-family: 'Fraunces'; font-weight: 400; font-size: 44px; line-height: 1.34;
+        color: var(--muted); max-width: 820px; opacity: 0; }
+      #outro .sub b { color: var(--fg); font-weight: 600; font-style: normal; }
+      #outro .hint { margin-top: auto; display: flex; align-items: center; gap: 18px; opacity: 0; }
+      #outro .hint .av { width: 46px; height: 46px; border-radius: 50%; background: var(--line); flex: none; }
+      #outro .hint .ph { font-family: 'JetBrains Mono'; font-weight: 500; font-size: 26px; color: var(--muted);
+        letter-spacing: .06em; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="30"
+         data-width="1080" data-height="1920">
+
+      <!-- A-roll: avatar (talking head) + its audio -->
+      <video id="avatar" class="clip" data-start="0" data-duration="30" data-track-index="0"
+             src="assets/avatar.mp4" muted playsinline></video>
+      <audio id="avatar-audio" class="clip" data-start="0" data-duration="30" data-track-index="1"
+             src="assets/avatar.mp4" data-volume="1"></audio>
+
+      <!-- Scrims + grain -->
+      <div id="scrim-top" class="scrim"></div>
+      <div id="scrim-bot" class="scrim"></div>
+      <div id="grain"></div>
+
+      <!-- Avatar-scene chrome -->
+      <div id="chrome">
+        <div id="wordmark">
+          <div class="mk">
+            <svg width="30" height="30" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+              <path d="M5 19 L12 12 L17 16 L24 8" stroke="#06101F" stroke-width="3.2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M18.5 8 L24 8 L24 13.5" stroke="#06101F" stroke-width="3.2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="tx">Optimisation fiscale<br /><b>Professionnels de la santé</b></div>
+        </div>
+        <div id="progress-wrap"><div id="progress"></div></div>
+      </div>
+
+      <!-- Captions (populated by script) -->
+      <div id="captions"></div>
+
+      <!-- ============ TITLE CARD ============ -->
+      <div id="title" class="card" data-layout-allow-overflow>
+        <div class="glow" data-layout-ignore style="width:760px;height:760px;left:380px;bottom:120px;"></div>
+        <div class="ghostsign" data-layout-ignore style="font-size:1180px;right:-120px;top:-160px;">$</div>
+        <div class="regmark" style="right:96px;bottom:80px;">FR · 30 s</div>
+        <div class="pad">
+          <div class="kicker">// Professionnels de la santé</div>
+          <div class="aud">
+            <div class="line"><span class="dot"></span>MÉDECINS</div>
+            <div class="line"><span class="dot"></span>DENTISTES</div>
+            <div class="line"><span class="dot"></span>PHARMACIENS</div>
+          </div>
+          <div class="rule"></div>
+          <div class="hook">Ce message peut vous faire économiser…</div>
+          <div class="money">
+            <span class="l">DES CENTAINES</span>
+            <span class="l">DE MILLIERS <span class="cur">$</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ OUTRO CTA CARD ============ -->
+      <div id="outro" class="card" data-layout-allow-overflow>
+        <div class="glow" data-layout-ignore style="width:820px;height:820px;left:-120px;top:-140px;"></div>
+        <div class="ghostsign" data-layout-ignore style="font-size:1100px;right:-100px;bottom:-220px;">$</div>
+        <div class="regmark" style="right:96px;top:90px;">→ COMMENTAIRES</div>
+        <div class="pad">
+          <div class="kicker">// Prochaine étape</div>
+          <div class="head">Écris <span class="em">un seul</span> mot</div>
+          <div class="field-row">
+            <svg class="arrow" width="92" height="92" viewBox="0 0 92 92" fill="none">
+              <path d="M20 30 L46 64 L72 30" stroke="#E8B85C" stroke-width="11"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="field">
+              <span class="word">«&nbsp;CONSULTATION&nbsp;»</span>
+              <span class="cursor"></span>
+            </div>
+          </div>
+          <div class="sub">…et découvrez combien <b>VOUS</b> pourriez économiser, en toute légalité.</div>
+          <div class="hint"><span class="av"></span><span class="ph">Écris ton commentaire…</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      /* ---- key timings (retune to real avatar clip length) ---- */
+      const TOTAL = 30;
+      const TITLE_OUT = 2.4, TITLE_GONE = 3.0;
+      const OUTRO_IN = TOTAL - 6;        // 24.0
+
+      /* ================= CAPTIONS =================
+         Placeholder timings — regenerated from `transcribe` on the real audio. */
+      const G = (s, e, words) => ({ s, e, words });
+      const CAP = [
+        G(3.10, 5.00, [["des",0],["centaines",1],["de",0],["milliers",1],["de",0],["dollars",1]]),
+        G(5.25, 7.05, [["Vous",0],["gagnez",0],["très",0],["bien",0],["votre",0],["vie",0]]),
+        G(7.25, 9.30, [["mais",0],["l’impôt",1],["en",0],["récupère",0],["une",0],["part",0],["énorme",1]]),
+        G(9.50, 10.70, [["Et",0],["le",0],["plus",0],["frustrant",0],["?",0]]),
+        G(10.90, 13.30, [["La",0],["majeure",0],["partie",0],["est",0],["totalement",0],["évitable",1]]),
+        G(13.60, 15.30, [["Avec",0],["la",0],["bonne",0],["structure",1]]),
+        G(15.50, 17.80, [["incorporation,",0],["placements,",0],["planification",1],["fiscale",1]]),
+        G(18.00, 20.40, [["vous",0],["gardez",0],["beaucoup",1],["plus",1],["de",0],["votre",0],["argent",0]]),
+        G(20.60, 21.80, [["en",0],["toute",0],["légalité",1]]),
+        G(22.00, 23.90, [["Combien",0],["pourriez-VOUS",0],["économiser",1],["?",0]]),
+      ];
+      const capLayer = document.getElementById("captions");
+      CAP.forEach((g, i) => {
+        const el = document.createElement("div");
+        el.className = "cap"; el.id = "cg-" + i;
+        g.words.forEach(([w, gold]) => {
+          const sp = document.createElement("span");
+          sp.className = gold ? "gold" : "";
+          sp.textContent = w;
+          el.appendChild(sp);
+          el.appendChild(document.createTextNode(" "));
+        });
+        capLayer.appendChild(el);
+      });
+      CAP.forEach((g, i) => {
+        const el = document.getElementById("cg-" + i);
+        tl.fromTo(el, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.26, ease: "power2.out", overwrite: "auto" }, g.s);
+        tl.to(el, { opacity: 0, y: -16, duration: 0.18, ease: "power2.in", overwrite: "auto" }, g.e - 0.18);
+        tl.set(el, { opacity: 0, visibility: "hidden" }, g.e); // deterministic kill
+      });
+
+      /* ================= TITLE CARD ================= */
+      tl.fromTo("#title .kicker", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 0.15);
+      tl.fromTo("#title .aud .line", { opacity: 0, x: -50 }, { opacity: 1, x: 0, duration: 0.55, ease: "expo.out", stagger: 0.12 }, 0.35);
+      tl.fromTo("#title .rule", { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "power2.inOut" }, 0.9);
+      tl.fromTo("#title .hook", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.55, ease: "power2.out" }, 1.05);
+      tl.fromTo("#title .money .l", { opacity: 0, y: 46 }, { opacity: 1, y: 0, duration: 0.6, ease: "back.out(1.4)", stagger: 0.13 }, 1.25);
+      // title transition out (reveals avatar) — this IS the title→avatar transition
+      tl.to("#title", { yPercent: -100, duration: 0.6, ease: "power3.inOut" }, TITLE_OUT);
+      tl.set("#title", { visibility: "hidden" }, TITLE_GONE + 0.05);
+
+      /* ================= AVATAR CHROME ================= */
+      tl.fromTo("#wordmark", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, TITLE_GONE);
+      tl.fromTo("#progress-wrap", { opacity: 0 }, { opacity: 1, duration: 0.5 }, TITLE_GONE);
+      tl.fromTo("#progress", { scaleX: 0.02 }, { scaleX: 0.96, duration: OUTRO_IN - TITLE_GONE, ease: "none" }, TITLE_GONE);
+
+      /* ================= OUTRO CTA CARD ================= */
+      tl.set("#outro", { yPercent: 100 }, 0); // park below-frame until the CTA beat
+      tl.to("#outro", { yPercent: 0, duration: 0.7, ease: "power3.out" }, OUTRO_IN);
+      tl.fromTo("#outro .kicker", { opacity: 0, x: -28 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, OUTRO_IN + 0.45);
+      tl.fromTo("#outro .head", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, OUTRO_IN + 0.6);
+      tl.fromTo("#outro .arrow", { opacity: 0, y: -24 }, { opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.7)" }, OUTRO_IN + 0.85);
+      tl.fromTo("#outro .field", { opacity: 0, scaleX: 0.9 }, { opacity: 1, scaleX: 1, duration: 0.5, ease: "back.out(1.5)" }, OUTRO_IN + 0.95);
+      tl.fromTo("#outro .sub", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.55, ease: "power2.out" }, OUTRO_IN + 1.25);
+      tl.fromTo("#outro .hint", { opacity: 0 }, { opacity: 0.9, duration: 0.5 }, OUTRO_IN + 1.5);
+      // arrow bob (finite) + cursor blink (finite)
+      const bobStart = OUTRO_IN + 1.5, bobCyc = 1.1, bobDur = TOTAL - bobStart;
+      tl.to("#outro .arrow", { y: 14, duration: bobCyc / 2, ease: "sine.inOut", overwrite: "auto",
+        repeat: Math.ceil(bobDur / bobCyc) * 2 - 1, yoyo: true }, bobStart);
+      const blinkStart = OUTRO_IN + 1.0, blinkDur = TOTAL - blinkStart, blinkCyc = 0.8;
+      tl.to("#outro .cursor", { opacity: 0, duration: blinkCyc / 2, ease: "steps(1)",
+        repeat: Math.ceil(blinkDur / blinkCyc) * 2 - 1, yoyo: true }, blinkStart);
+
+      /* ================= AMBIENT (finite breathing glows) ================= */
+      const breathe = (sel, t0, t1, cyc) =>
+        tl.to(sel, { scale: 1.08, duration: cyc / 2, ease: "sine.inOut",
+          transformOrigin: "center", repeat: Math.ceil((t1 - t0) / cyc) * 2 - 1, yoyo: true }, t0);
+      breathe("#title .glow", 0.2, TITLE_GONE, 2.0);
+      breathe("#outro .glow", OUTRO_IN, TOTAL, 2.2);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

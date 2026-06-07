@@ -1,0 +1,7 @@
+# Render outputs (large, regenerable via `npm run render`)
+renders/
+
+# Tooling caches
+.hyperframes/
+node_modules/
+*.log
