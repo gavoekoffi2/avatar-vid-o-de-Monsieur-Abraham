@@ -1,6 +1,9 @@
 # Render outputs (large, regenerable via `npm run render`)
 renders/
 
+# TTS stand-in audio (regenerable from narration.txt; muxed into assets/avatar.mp4)
+*.wav
+
 # Tooling caches
 .hyperframes/
 node_modules/
